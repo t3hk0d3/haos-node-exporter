@@ -1,4 +1,4 @@
-ARG BUILD_FROM="ghcr.io/home-assistant/$TARGETARCH-base-python:latest"
+ARG BUILD_FROM="ghcr.io/home-assistant/base-python:latest"
 FROM ${BUILD_FROM} AS builder
 
 # This installs ~300 MB of dependencies we don't need in the final image.
