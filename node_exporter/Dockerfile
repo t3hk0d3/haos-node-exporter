@@ -1,17 +1,20 @@
-ARG BUILD_FROM
-FROM $BUILD_FROM
+ARG BUILD_FROM="ghcr.io/home-assistant/$TARGETARCH-base-python:latest"
+FROM ${BUILD_FROM} AS builder
 
-# Install Python 3 and pip explicitly — the supervisor may inject a base
-# image that does not include them (e.g. ghcr.io/home-assistant/amd64-base).
-RUN apk add --no-cache python3 py3-pip
+# This installs ~300 MB of dependencies we don't need in the final image.
+RUN apk add --no-cache build-base gcc
+
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir --prefix=/install -r requirements.txt
+
+FROM ${BUILD_FROM}
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
+# This results in just a ~20 MB of dependencies.
+COPY --from=builder /install /usr/local
 
 COPY app/ ./app/
-COPY run.sh /run.sh
-RUN chmod +x /run.sh
+COPY --chmod=755 run.sh /run.sh
 
 CMD ["/run.sh"]
